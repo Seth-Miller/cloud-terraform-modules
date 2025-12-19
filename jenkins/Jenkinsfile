@@ -1,0 +1,67 @@
+def createDir = '$HOME/oci-learn/tfm/tests/aws_load_git_secret_test'
+def testDir = '$HOME/oci-learn/tfm/tests/aws_setup_test'
+pipeline {
+  agent { label 'user-agent' }
+  environment {
+    TF_VAR_git_username = 'testuser'
+    TF_VAR_git_password = 'testpassword'
+  }
+  stages {
+    stage('create git secret') {
+      steps {
+        sh("terraform -chdir=${createDir} init -no-color")
+        sh("terraform -chdir=${createDir} apply -no-color -auto-approve")
+      }
+    }
+    stage('test git secret') {
+      steps {
+        sh("terraform -chdir=${testDir} init -no-color")
+        sh("terraform -chdir=${testDir} apply -no-color -auto-approve")
+      }
+    }
+    stage('test command on remote host') {
+      steps {
+        script {
+          def sshSetup = ''
+          def sshOut = ''
+          def tfOut = readJSON text: sh(script: "terraform -chdir=${testDir} output -json", returnStdout: true).trim()
+            sshSetup = sh(script: "ssh-agent -s | grep -Gv '^echo'", returnStdout: true)
+            sh(
+              """
+                ${sshSetup} 1>/dev/null
+                echo '${tfOut.private_key_pem.value}' | ssh-add -
+              """)
+            sshOut = sh(script:
+              """
+                ${sshSetup} 1>/dev/null
+                ssh -o StrictHostKeyChecking=no \
+                ec2-user@${tfOut.public_ip.value} \
+                '/usr/share/git_credential_helper/git_credential_helper.py get'
+              """,
+              returnStdout: true
+              ).trim()
+            sh(
+              """
+                ${sshSetup}
+                ssh-agent -k
+              """)
+          if (sshOut == 'username=testuser\npassword=testpassword') {
+            echo 'SUCCESS: git secret is working'
+          } else {
+            error "VALIDATION FAILED: git credential output is '${sshOut}'"
+          }
+        }
+      }
+    }
+    stage('tear down test environment') {
+      steps {
+        sh("terraform -chdir=${testDir} apply -no-color -auto-approve -destroy")
+      }
+    }
+    stage('tear down create environment') {
+      steps {
+        sh("terraform -chdir=${createDir} apply -no-color -auto-approve -destroy")
+      }
+    }
+  }
+}
