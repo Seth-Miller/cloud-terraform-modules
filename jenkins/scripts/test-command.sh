@@ -12,4 +12,4 @@ sshOut=$(ssh -o StrictHostKeyChecking=no ec2-user@$(terraform -chdir=${1} output
 ssh-agent -k
 
 # check output of command
-[[ "$sshOut" != $'username=testuser\npassword=testpassword' ]] && exit 1
+[[ "$sshOut" != $'username=testuser\npassword=testpassword' ]] && exit 1 
