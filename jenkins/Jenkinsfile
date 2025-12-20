@@ -9,27 +9,27 @@ pipeline {
   stages {
     stage('create git secret') {
       steps {
-        sh("./scripts/terraform-apply.sh \"${createDir}\"")
+        sh("./jenkins/scripts/terraform-apply.sh \"${createDir}\"")
       }
     }
     stage('test git secret') {
       steps {
-        sh("./scripts/terraform-apply.sh \"${testDir}\"")
+        sh("./jenkins/scripts/terraform-apply.sh \"${testDir}\"")
       }
     }
     stage('test command on remote host') {
       steps {
-        sh("./scripts/test-command.sh \"${testDir}\"")
+        sh("./jenkins/scripts/test-command.sh \"${testDir}\"")
       }
     }
     stage('tear down test environment') {
       steps {
-        sh("./scripts/terraform-destroy.sh \"${testDir}\"")
+        sh("./jenkins/scripts/terraform-destroy.sh \"${testDir}\"")
       }
     }
     stage('tear down create environment') {
       steps {
-        sh("./scripts/terraform-destroy.sh \"${createDir}\"")
+        sh("./jenkins/scripts/terraform-destroy.sh \"${createDir}\"")
       }
     }
   }
