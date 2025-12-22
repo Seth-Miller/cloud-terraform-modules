@@ -5,6 +5,7 @@ pipeline {
   environment {
     TF_VAR_git_username = 'testuser'
     TF_VAR_git_password = 'testpassword'
+    jkEnvironment = 'AWS'
   }
   stages {
     stage('create git secret') {
