@@ -46,6 +46,6 @@ resource "oci_core_vnic_attachment" "vm" {
   }
 }
 
-output "public-ip" {
+output "public_ip" {
   value = oci_core_instance.vm.public_ip
 }
