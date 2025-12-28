@@ -1,0 +1,35 @@
+def createDir = '$HOME/cloud-tests/terraform/tests/oci_load_git_secret_test'
+def testDir = '$HOME/cloud-tests/terraform/tests/oci_setup_test'
+pipeline {
+  agent { label 'user-agent' }
+  environment {
+    jkEnvironment = 'OCI'
+  }
+  stages {
+    stage('create git secret') {
+      steps {
+        sh("./jenkins/scripts/terraform-apply.sh \"${createDir}\"")
+      }
+    }
+    stage('test git secret') {
+      steps {
+        sh("./jenkins/scripts/terraform-apply.sh \"${testDir}\"")
+      }
+    }
+    stage('test command on remote host') {
+      steps {
+        sh("./jenkins/scripts/test-command.sh \"${testDir}\"")
+      }
+    }
+    stage('tear down test environment') {
+      steps {
+        sh("./jenkins/scripts/terraform-destroy.sh \"${testDir}\"")
+      }
+    }
+    stage('tear down create environment') {
+      steps {
+        sh("./jenkins/scripts/terraform-destroy.sh \"${createDir}\"")
+      }
+    }
+  }
+}

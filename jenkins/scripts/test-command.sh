@@ -8,7 +8,7 @@ case "$jkEnvironment" in
     sshUser=ec2-user
     ;;
   OCI)
-    sshUser=oci-user
+    sshUser=opc
     ;;
   *)
     sshUser=user
