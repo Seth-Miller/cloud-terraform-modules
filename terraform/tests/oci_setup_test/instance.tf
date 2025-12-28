@@ -19,7 +19,7 @@ resource "oci_core_instance" "vm" {
   }
 
   metadata = {
-    "ssh_authorized_keys" = var.ssh_key,
+    "ssh_authorized_keys" = tls_private_key.ssh.public_key_openssh,
     "user_data"           = module.oci_setup.template_cloudinit_config
   }
   shape = var.vm_shape
