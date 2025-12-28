@@ -33,16 +33,24 @@ resource "oci_core_instance" "vm" {
     source_type             = "image"
   }
 
+  provisioner "remote-exec" {
+    inline = [
+      "cloud-init status --wait",
+      "echo 'instance is ready for use!'"
+    ]
+
+    connection {
+      host        = oci_core_instance.vm.public_ip
+      user        = "opc"
+      private_key = tls_private_key.ssh.private_key_pem
+      agent       = false
+      timeout     = "5m"
+    }
+  }
+
   freeform_tags = {
     Name    = "${var.project_name}_instance"
     Project = var.project_name
-  }
-}
-
-resource "oci_core_vnic_attachment" "vm" {
-  instance_id = oci_core_instance.vm.id
-  create_vnic_details {
-    subnet_id = oci_core_subnet.lab_private.id
   }
 }
 

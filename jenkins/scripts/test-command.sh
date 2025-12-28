@@ -20,7 +20,7 @@ eval $(ssh-agent -s)
 # add private key to ssh agent
 terraform -chdir=${1} output -raw private_key_pem | ssh-add -
 # execute command
-#echo "ssh -o StrictHostKeyChecking=no $sshUser@$(terraform -chdir=\"${1}\" output -raw public_ip) $getCredentialCommand"
+#echo "ssh -o StrictHostKeyChecking=no $sshUser@\$(terraform -chdir=\"${1}\" output -raw public_ip) $getCredentialCommand"
 sshOut=$(ssh -o StrictHostKeyChecking=no $sshUser@$(terraform -chdir="${1}" output -raw public_ip) $getCredentialCommand)
 # kill ssh agent
 ssh-agent -k
