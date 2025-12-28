@@ -1,23 +1,22 @@
-
-resource "oci_identity_compartment" "id" {
-  compartment_id = local.parent_compartment_ocid
-  name           = local.compartment_name
-  description    = local.compartment_description
-}
-
 resource "oci_core_vcn" "lab" {
-  compartment_id = oci_identity_compartment.id.id
-  cidr_blocks    = local.vcn_cidr_blocks
-  display_name   = local.vcn_display_name
-  dns_label      = local.vcn_dns_label
+  compartment_id = oci_identity_compartment.compartment.id
+  cidr_blocks    = var.vcn_cidr_blocks
+  display_name   = "${var.project_name}_vcn"
+  dns_label      = replace("${var.project_name}", "-", "")
+
+  freeform_tags = {
+    Name    = "${var.project_name}_vcn"
+    Project = var.project_name
+  }
 }
 
 resource "oci_core_default_security_list" "default_security_list" {
   manage_default_resource_id = oci_core_vcn.lab.default_security_list_id
+  display_name               = "${var.project_name}_security_list_public"
 
   dynamic "ingress_security_rules" {
     iterator = port
-    for_each = local.ingress_ports
+    for_each = [22]
 
     content {
       protocol = 6
@@ -40,7 +39,7 @@ resource "oci_core_default_security_list" "default_security_list" {
 
   dynamic "ingress_security_rules" {
     iterator = cidr
-    for_each = local.vcn_cidr_blocks
+    for_each = var.vcn_cidr_blocks
 
     content {
       protocol = 1
@@ -54,17 +53,22 @@ resource "oci_core_default_security_list" "default_security_list" {
   egress_security_rules {
     destination = "0.0.0.0/0"
     protocol    = "all"
+  }
+
+  freeform_tags = {
+    Name    = "${var.project_name}_security_list_public"
+    Project = var.project_name
   }
 }
 
 resource "oci_core_security_list" "security_list_private_subnet" {
-  compartment_id = oci_identity_compartment.id.id
+  compartment_id = oci_identity_compartment.compartment.id
   vcn_id         = oci_core_vcn.lab.id
-  display_name   = "security list for private subnet-${local.vcn_display_name}"
+  display_name   = "${var.project_name}_security_list_private"
 
   dynamic "ingress_security_rules" {
     iterator = port
-    for_each = local.ingress_ports
+    for_each = [22]
 
     content {
       protocol = 6
@@ -87,7 +91,7 @@ resource "oci_core_security_list" "security_list_private_subnet" {
 
   dynamic "ingress_security_rules" {
     iterator = cidr
-    for_each = local.vcn_cidr_blocks
+    for_each = var.vcn_cidr_blocks
     content {
       protocol = 1
       source   = cidr.value
@@ -101,45 +105,79 @@ resource "oci_core_security_list" "security_list_private_subnet" {
     destination = "0.0.0.0/0"
     protocol    = "all"
   }
+
+  freeform_tags = {
+    Name    = "${var.project_name}_security_list_private"
+    Project = var.project_name
+  }
 }
 
 resource "oci_core_subnet" "lab_public" {
-  compartment_id = oci_identity_compartment.id.id
+  compartment_id = oci_identity_compartment.compartment.id
   vcn_id         = oci_core_vcn.lab.id
+  display_name   = "${var.project_name}_subnet_public"
+  dns_label      = "public"
 
-  dns_label                  = local.subnet_public_dns_label
-  ipv4cidr_blocks            = local.subnet_ipv4cidr_blocks_public
+  ipv4cidr_blocks            = var.public_cidr_blocks
   prohibit_public_ip_on_vnic = false
+
+  freeform_tags = {
+    Name    = "${var.project_name}_subnet_public"
+    Project = var.project_name
+  }
 }
 
 resource "oci_core_subnet" "lab_private" {
-  compartment_id = oci_identity_compartment.id.id
+  compartment_id = oci_identity_compartment.compartment.id
   vcn_id         = oci_core_vcn.lab.id
+  display_name   = "${var.project_name}_subnet_private"
+  dns_label      = "private"
 
-  dns_label                  = local.subnet_private_dns_label
-  ipv4cidr_blocks            = local.subnet_ipv4cidr_blocks_private
+  ipv4cidr_blocks            = var.private_cidr_blocks
   prohibit_public_ip_on_vnic = true
   security_list_ids          = [oci_core_security_list.security_list_private_subnet.id]
 
+  freeform_tags = {
+    Name    = "${var.project_name}_subnet_private"
+    Project = var.project_name
+  }
 }
 
 resource "oci_core_nat_gateway" "lab" {
-  compartment_id = oci_identity_compartment.id.id
+  compartment_id = oci_identity_compartment.compartment.id
   vcn_id         = oci_core_vcn.lab.id
+  display_name   = "${var.project_name}_nat_gateway"
+
+  freeform_tags = {
+    Name    = "${var.project_name}_nat_gateway"
+    Project = var.project_name
+  }
 }
 
 resource "oci_core_internet_gateway" "lab" {
-  compartment_id = oci_identity_compartment.id.id
+  compartment_id = oci_identity_compartment.compartment.id
   vcn_id         = oci_core_vcn.lab.id
   enabled        = true
+  display_name   = "${var.project_name}_internet_gateway"
+
+  freeform_tags = {
+    Name    = "${var.project_name}_internet_gateway"
+    Project = var.project_name
+  }
 }
 
 resource "oci_core_default_route_table" "lab" {
   manage_default_resource_id = oci_core_vcn.lab.default_route_table_id
+  display_name               = "${var.project_name}_route_table"
 
   route_rules {
     network_entity_id = oci_core_internet_gateway.lab.id
     destination       = "0.0.0.0/0"
     destination_type  = "CIDR_BLOCK"
+  }
+
+  freeform_tags = {
+    Name    = "${var.project_name}_route_table"
+    Project = var.project_name
   }
 }

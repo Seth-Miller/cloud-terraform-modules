@@ -6,6 +6,6 @@ variable "region" {
   type = string
 }
 
-variable "secret_name" {
+variable "secret_ocid" {
   type      = string
 }

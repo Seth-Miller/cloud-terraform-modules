@@ -1,20 +1,26 @@
+module "oci_setup" {
+  source = "../../modules/oci_setup"
 
+  project_name = var.project_name
+  region       = var.region
+  secret_ocid  = data.oci_vault_secrets.secret.secrets[0].id
+}
 
 
 resource "oci_core_instance" "vm" {
   availability_domain = var.availability_domain
-  compartment_id      = oci_identity_compartment.id.id
-  display_name    = "${var.project_name}_instance"
+  compartment_id      = oci_identity_compartment.compartment.id
+  display_name        = "${var.project_name}_instance"
 
   create_vnic_details {
-    display_name    = "${var.project_name}_vnic"
-    hostname_label    = "${var.project_name}_instance"
+    display_name   = "${var.project_name}_vnic"
+    hostname_label = "vm"
     subnet_id      = oci_core_subnet.lab_public.id
   }
 
   metadata = {
     "ssh_authorized_keys" = var.ssh_key,
-#    "user_data"           = "${data.template_cloudinit_config.config.rendered}"
+    "user_data"           = module.oci_setup.template_cloudinit_config
   }
   shape = var.vm_shape
   shape_config {
@@ -27,7 +33,7 @@ resource "oci_core_instance" "vm" {
     source_type             = "image"
   }
 
-  tags = {
+  freeform_tags = {
     Name    = "${var.project_name}_instance"
     Project = var.project_name
   }

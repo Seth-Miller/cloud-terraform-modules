@@ -1,8 +1,0 @@
-project_name      = "test-aws-setup"
-cidr_block        = "10.0.0.0/24"
-region            = "us-east-1"
-availability_zone = "us-east-1a"
-vm_ami            = "ami-068c0051b15cdb816"
-vm_instance_type  = "t3.micro"
-vm_ssh_key        = "ssh-key-2025-09-08"
-secret_name       = "test-aws_load_git_secret_git-secret"
