@@ -24,5 +24,5 @@ write_files:
           command = sys.argv[1] if len(sys.argv) > 1 else None
             
           if command == "get":
-              print(f"username={username}")
+              print(f"username={username}".strip('\n'))
               print(f"password={password}".strip('\n'))
