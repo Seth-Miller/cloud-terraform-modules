@@ -1,0 +1,7 @@
+oci
+python_terraform
+pathlib
+jsonargparse
+os
+sys
+logging
