@@ -65,12 +65,13 @@ def main():
 
 
     # Format the working directory path and initialize Terraform directory
-    dir_path = sinput.working_dir.split('/')
-    logger.debug(f"Directory path split: {dir_path}")
-    logger.debug(f"Directory path assembled as 'Path': {Path(*dir_path)}")
+    #dir_path = sinput.working_dir.split('/')
+    #dir_path = os.path.abspath(__file__)
+    #logger.debug(f"Directory path split: {dir_path}")
+    #logger.debug(f"Directory path assembled as 'Path': {Path(*dir_path)}")
 
     logger.info(f"Initializing Terraform in directory: {sinput.working_dir}")
-    tf = Terraform(working_dir=Path(*dir_path))
+    tf = Terraform(working_dir=Path(sinput.working_dir))
     tf.init()
     
     # Initialize OCI SDK
