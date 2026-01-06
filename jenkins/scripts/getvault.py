@@ -1,3 +1,5 @@
+#!/usr/bin/python
+ 
 import oci
 from python_terraform import Terraform
 from pathlib import Path
