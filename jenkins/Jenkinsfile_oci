@@ -1,11 +1,30 @@
 def createDir = '$HOME/cloud-tests/terraform/tests/oci_load_git_secret_test'
 def testDir = '$HOME/cloud-tests/terraform/tests/oci_setup_test'
+def getvaultInput = '''
+  {
+    "vault_name": "test-oci_load_git_secret_git-secret",
+    "secret_name": "test-oci_load_git_secret_git-secret",
+    "key_name": "test-oci_load_git_secret_git-secret",
+    "working_dir": ${createDir}
+  }
+'''
+
 pipeline {
   agent { label 'user-agent' }
   environment {
     jkEnvironment = 'OCI'
   }
   stages {
+    stage('create git secret') {
+      steps {
+        script {
+          python '''
+            ./jenkins/scripts/getvault.py <<< "${getvaultInput}"
+          '''
+        }
+      }
+    }
+    /*
     stage('create git secret') {
       steps {
         sh("./jenkins/scripts/terraform-apply.sh \"${createDir}\"")
@@ -31,5 +50,6 @@ pipeline {
         sh("./jenkins/scripts/terraform-destroy.sh \"${createDir}\"")
       }
     }
+    */
   }
 }
