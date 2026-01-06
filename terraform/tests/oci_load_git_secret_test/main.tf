@@ -5,7 +5,7 @@ data "external" "getvault" {
     vault_name = "${var.project_name}_git-secret"
     secret_name = "${var.project_name}_git-secret"
     key_name = "${var.project_name}_git-secret"
-    working_dir = abspath("${path.module}")
+    working_dir = abspath("${path.root}")
   }
 }
 

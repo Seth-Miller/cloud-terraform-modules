@@ -4,7 +4,8 @@ import oci
 from python_terraform import Terraform
 from pathlib import Path
 from jsonargparse import ArgumentParser, Namespace
-import os, sys, logging
+from pythonjsonlogger import jsonlogger
+import os, sys, logging, json
 
 vault_type = 'oci_kms_vault'
 vault_id = 'id'
@@ -16,15 +17,19 @@ module_name = 'oci_load_git_secret'
 module_path = '.'.join(['module', module_name])
 
 debug_mode = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
-log_level = logging.DEBUG if debug_mode else logging.INFO
 
 # Setup logger
+log_level = logging.DEBUG if debug_mode else logging.INFO
+log_format = "%(asctime)s %(levelname)s %(message)s %(name)s"
+formatter = jsonlogger.JsonFormatter(log_format, rename_fields={"levelname": "level", "name": "loggerName"})
+logHandler = logging.StreamHandler(sys.stderr)
+logHandler.setFormatter(formatter)
 logging.basicConfig(
     level=log_level,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler(sys.stderr)]
+    format=log_format,
+    handlers=[logHandler]
 )
-logger = logging.getLogger("OCI_PROCESSOR")
+logger = logging.getLogger(__name__)
 
 def show_help(parser, error_msg=None):
     """Prints an error message followed by the help menu."""
@@ -34,6 +39,26 @@ def show_help(parser, error_msg=None):
     sys.exit(1)
 
 def main():
+    # Import Terraform resource into state file
+    def import_tf_resource(tf_resource_path, tf_resource_id):
+        try:
+            logging.debug(f"Terraform state file exists, checking for {tf_resource_path}")
+
+            resources = [r for ms in json.loads(tf_show_stdout)['values']['root_module']['child_modules'] for r in ms['resources']]
+            if [r for r in resources if r['address'] == tf_resource_path]:
+                logging.info(f"{tf_resource_path} already exists in Terraform state")
+                return 0
+        except KeyError:
+            pass
+
+        logging.info(f"Importing {tf_resource_path} into Terraform state")
+        tf.import_cmd(tf_resource_path, tf_resource_id)
+
+
+
+    # Start the json stderr output
+    #sys.stderr.write('{"result": ')
+
     # Define the argument parser
     custom_usage = "echo '{\"vault_name\": \"...\", \"secret_name\": \"...\", \"key_name\": \"...\", \"working_dir\": \"...\"}' | python %(prog)s"
     parser = ArgumentParser(
@@ -72,9 +97,13 @@ def main():
     #logger.debug(f"Directory path split: {dir_path}")
     #logger.debug(f"Directory path assembled as 'Path': {Path(*dir_path)}")
 
-    logger.info(f"Initializing Terraform in directory: {sinput.working_dir}")
+    logger.info(f"Initializing Terraform in directory: {Path(sinput.working_dir)}")
     tf = Terraform(working_dir=Path(sinput.working_dir))
     tf.init()
+    tf_show_return_code, tf_show_stdout, tf_show_stderr = tf.show(json=True)
+    #except Exception as e:
+    #    logger.info(f"TF Exception: {type(e).__name__}")
+
     
     # Initialize OCI SDK
     config = oci.config.from_file()
@@ -106,31 +135,13 @@ def main():
             # if the vault is active, import it into the terraform state
             if vault.lifecycle_state == oci.key_management.models.Vault.LIFECYCLE_STATE_ACTIVE:
                 logging.debug(f"Vault {vault.id} is ACTIVE")
-
-                try:
-                    if not [r for r in tf.tfstate.resources if r['module'] == module_path and r['type'] == vault_type]:
-                        logging.info(f"Importing {vault_resource_path} into Terraform state")
-                        tf.import_cmd(vault_resource_path, vault.id)
-                    else:
-                        logging.info(f"{vault_resource_path} already exists in Terraform state")
-                except AttributeError:
-                    logging.info(f"Importing {vault_resource_path} into Terraform state")
-                    tf.import_cmd(vault_resource_path, vault.id)
+                import_tf_resource(vault_resource_path, vault.id)
     
             # if the vault is pending deletion, activate it and import it into the terraform state
             if vault.lifecycle_state == oci.key_management.models.Vault.LIFECYCLE_STATE_PENDING_DELETION:
                 logging.info(f"Vault {vault.id} is PENDING DELETION, changing to ACTIVE")
                 kms_vault_client.cancel_vault_deletion(vault_id=vault.id)
-
-                try:
-                    if not [r for r in tf.tfstate.resources if r['module'] == module_path and r['type'] == vault_type]:
-                        logging.info(f"Importing {vault_resource_path} into Terraform state")
-                        tf.import_cmd(vault_resource_path, vault.id)
-                    else:
-                        logging.info(f"{vault_resource_path} already exists in Terraform state")
-                except AttributeError:
-                    logging.info(f"Importing {vault_resource_path} into Terraform state")
-                    tf.import_cmd(vault_resource_path, vault.id)
+                import_tf_resource(vault_resource_path, vault.id)
     
             # if the key exists, import it into the terraform state
             for key in keys_list:
@@ -140,16 +151,7 @@ def main():
                     logging.debug(f"Found a match on key name: {key.display_name}")
                     key_resource_path = '.'.join([module_path, key_type, key_id])
                     key_endpoint_path = '/'.join(['managementEndpoint', vault.management_endpoint, 'keys', key.id])
-
-                    try:
-                        if not [r for r in tf.tfstate.resources if r['module'] == module_path and r['type'] == key_type]:
-                            logging.info(f"Importing {key_resource_path} into Terraform state")
-                            tf.import_cmd(key_resource_path, key_endpoint_path)
-                        else:
-                            logging.info(f"{key_resource_path} already exists in Terraform state")
-                    except AttributeError:
-                        logging.info(f"Importing {key_resource_path} into Terraform state")
-                        tf.import_cmd(key_resource_path, key_endpoint_path)
+                    import_tf_resource(key_resource_path, key_endpoint_path)
                     break
     
             # check for existing secrets, if it exists, import it into the terraform state
@@ -159,18 +161,14 @@ def main():
                 if secret.vault_id == vault.id and secret.secret_name == sinput.secret_name:
                     logging.debug(f"Found a match on secret name: {secret.secret_name}")
                     secret_resource_path = '.'.join([module_path, secret_type, secret_id])
-
-                    try:
-                        if not [r for r in tf.tfstate.resources if r['module'] == module_path and r['type'] == secret_type]:
-                            logging.info(f"Importing {secret_resource_path} into Terraform state")
-                            tf.import_cmd(secret_resource_path, secret.id)
-                        else:
-                            logging.info(f"{secret_resource_path} already exists in Terraform state")
-                    except AttributeError:
-                        logging.info(f"Importing {secret_resource_path} into Terraform state")
-                        tf.import_cmd(secret_resource_path, secret.id)
+                    import_tf_resource(secret_resource_path, secret.id)
                     break
             break
+
+    # End the json stderr output
+    #sys.stderr.write('}')
+    # Return a result
+    sys.stdout.write('{"result": "done"}')
 
         
 if __name__ == "__main__":
