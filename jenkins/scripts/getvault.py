@@ -55,10 +55,6 @@ def main():
         tf.import_cmd(tf_resource_path, tf_resource_id)
 
 
-
-    # Start the json stderr output
-    #sys.stderr.write('{"result": ')
-
     # Define the argument parser
     custom_usage = "echo '{\"vault_name\": \"...\", \"secret_name\": \"...\", \"key_name\": \"...\", \"working_dir\": \"...\"}' | python %(prog)s"
     parser = ArgumentParser(
@@ -90,20 +86,10 @@ def main():
     except Exception as e:
         show_help(parser, f"Input Validation Error: {e}")
 
-
-    # Format the working directory path and initialize Terraform directory
-    #dir_path = sinput.working_dir.split('/')
-    #dir_path = os.path.abspath(__file__)
-    #logger.debug(f"Directory path split: {dir_path}")
-    #logger.debug(f"Directory path assembled as 'Path': {Path(*dir_path)}")
-
     logger.info(f"Initializing Terraform in directory: {Path(sinput.working_dir)}")
     tf = Terraform(working_dir=Path(sinput.working_dir))
     tf.init()
     tf_show_return_code, tf_show_stdout, tf_show_stderr = tf.show(json=True)
-    #except Exception as e:
-    #    logger.info(f"TF Exception: {type(e).__name__}")
-
     
     # Initialize OCI SDK
     config = oci.config.from_file()
@@ -165,8 +151,6 @@ def main():
                     break
             break
 
-    # End the json stderr output
-    #sys.stderr.write('}')
     # Return a result
     sys.stdout.write('{"result": "done"}')
 
