@@ -127,6 +127,13 @@ def main():
             if vault.lifecycle_state == oci.key_management.models.Vault.LIFECYCLE_STATE_PENDING_DELETION:
                 logging.info(f"Vault {vault.id} is PENDING DELETION, changing to ACTIVE")
                 kms_vault_client.cancel_vault_deletion(vault_id=vault.id)
+                oci.wait_until(
+                    kms_vault_client,
+                    kms_vault_client.get_vault(vault.id),
+                    'lifecycle_state',
+                    'ACTIVE',
+                    max_wait_seconds=600,
+                    max_interval_seconds=30)
                 import_tf_resource(vault_resource_path, vault.id)
     
             # if the key exists, import it into the terraform state
