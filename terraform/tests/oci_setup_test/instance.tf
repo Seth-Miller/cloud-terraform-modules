@@ -3,7 +3,7 @@ module "oci_setup" {
 
   project_name = var.project_name
   region       = var.region
-  secret_ocid  = data.oci_vault_secrets.secret.secrets[0].id
+  secret_ocid  = local.target_secret_id
 }
 
 

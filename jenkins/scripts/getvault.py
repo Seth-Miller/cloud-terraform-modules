@@ -130,7 +130,7 @@ def main():
                 # kms_vault_client.cancel_vault_deletion(vault_id=vault.id)
                 # wait until the vault is in an active state
                 # oci.wait_until(kms_vault_client, kms_vault_client.get_vault(vault.id), 'lifecycle_state', 'ACTIVE')
-                kms_vault_composite.cancel_vault_deletion_and_wait_for_state(vault_id,
+                kms_vault_composite.cancel_vault_deletion_and_wait_for_state(vault.id,
                     wait_for_states=[oci.key_management.models.Vault.LIFECYCLE_STATE_ACTIVE])
                 import_tf_resource(vault_resource_path, vault.id)
     
