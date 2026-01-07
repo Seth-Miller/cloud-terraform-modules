@@ -157,7 +157,7 @@ def main():
 
                     # if the secret is active, import it into the terraform state
                     if secret.lifecycle_state == oci.vault.models.Secret.LIFECYCLE_STATE_ACTIVE:
-                        logging.info(f"Secret {secret.id} is ACTIVE")
+                        logging.debug(f"Secret {secret.id} is ACTIVE")
                         import_tf_resource(secret_resource_path, secret.id)
     
                     # if the secret is pending deletion, activate it and import it into the terraform state
