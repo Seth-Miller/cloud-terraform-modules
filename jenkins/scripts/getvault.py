@@ -147,7 +147,18 @@ def main():
                 if secret.vault_id == vault.id and secret.secret_name == sinput.secret_name:
                     logging.debug(f"Found a match on secret name: {secret.secret_name}")
                     secret_resource_path = '.'.join([module_path, secret_type, secret_id])
-                    import_tf_resource(secret_resource_path, secret.id)
+
+                    # if the secret is active, import it into the terraform state
+                    if secret.lifecycle_state == oci.vault.models.Secret.LIFECYCLE_STATE_ACTIVE:
+                        logging.info(f"Secret {secret.id} is ACTIVE")
+                        import_tf_resource(secret_resource_path, secret.id)
+    
+                    # if the secret is pending deletion, activate it and import it into the terraform state
+                    if secret.lifecycle_state == oci.vault.models.Secret.LIFECYCLE_STATE_PENDING_DELETION:
+                        logging.info(f"Secret {secret.id} is PENDING DELETION, changing to ACTIVE")
+                        kms_secret_client.cancel_secret_deletion(secret_id=secret.id)
+                        import_tf_resource(secret_resource_path, secret.id)
+    
                     break
             break
 
