@@ -6,7 +6,7 @@ locals {
   target_vault_id = [
     for vault in data.oci_kms_vaults.vault.vaults : 
     vault.id if vault.display_name == var.vault_name
-    and vault.state == "ACTIVE"
+    && vault.state == "ACTIVE"
   ][0]
 }
 
