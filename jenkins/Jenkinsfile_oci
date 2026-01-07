@@ -22,13 +22,8 @@ pipeline {
               ./jenkins/scripts/getvault.py <<< "${SCRIPT_INPUT}"
             '''
           }
+          sh("./jenkins/scripts/terraform-apply.sh \"${createDir}\"")
         }
-      }
-    }
-    /*
-    stage('create git secret') {
-      steps {
-        sh("./jenkins/scripts/terraform-apply.sh \"${createDir}\"")
       }
     }
     stage('test git secret') {
@@ -51,6 +46,5 @@ pipeline {
         sh("./jenkins/scripts/terraform-destroy.sh \"${createDir}\"")
       }
     }
-    */
   }
 }
