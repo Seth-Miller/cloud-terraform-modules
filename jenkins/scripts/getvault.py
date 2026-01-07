@@ -41,7 +41,6 @@ def show_help(parser, error_msg=None):
 def main():
     # Import Terraform resource into state file
     def import_tf_resource(tf_resource_path, tf_resource_id):
-        time.sleep(10)
         try:
             logging.debug(f"Terraform state file exists, checking for {tf_resource_path}")
 
@@ -127,7 +126,6 @@ def main():
             # if the vault is pending deletion, activate it and import it into the terraform state
             if vault.lifecycle_state == oci.key_management.models.Vault.LIFECYCLE_STATE_PENDING_DELETION:
                 logging.info(f"Vault {vault.id} is PENDING DELETION, changing to ACTIVE")
-                time.sleep(10)
                 kms_vault_client.cancel_vault_deletion(vault_id=vault.id)
                 oci.wait_until(
                     kms_vault_client,
@@ -137,6 +135,7 @@ def main():
                     max_wait_seconds=600,
                     max_interval_seconds=30)
                 import_tf_resource(vault_resource_path, vault.id)
+                time.sleep(10)
     
             # if the key exists, import it into the terraform state
             for key in keys_list:
