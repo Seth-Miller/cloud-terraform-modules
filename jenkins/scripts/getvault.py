@@ -127,6 +127,7 @@ def main():
             # if the vault is pending deletion, activate it and import it into the terraform state
             if vault.lifecycle_state == oci.key_management.models.Vault.LIFECYCLE_STATE_PENDING_DELETION:
                 logging.info(f"Vault {vault.id} is PENDING DELETION, changing to ACTIVE")
+                time.sleep(10)
                 kms_vault_client.cancel_vault_deletion(vault_id=vault.id)
                 oci.wait_until(
                     kms_vault_client,
@@ -165,6 +166,7 @@ def main():
                     # if the secret is pending deletion, activate it and import it into the terraform state
                     if secret.lifecycle_state == oci.vault.models.Secret.LIFECYCLE_STATE_PENDING_DELETION:
                         logging.info(f"Secret {secret.id} is PENDING DELETION, changing to ACTIVE")
+                        time.sleep(10)
                         kms_secret_client.cancel_secret_deletion(secret_id=secret.id)
                         import_tf_resource(secret_resource_path, secret.id)
     
