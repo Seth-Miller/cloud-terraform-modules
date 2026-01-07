@@ -5,7 +5,7 @@ from python_terraform import Terraform
 from pathlib import Path
 from jsonargparse import ArgumentParser, Namespace
 from pythonjsonlogger import jsonlogger
-import os, sys, logging, json
+import os, sys, logging, json, time
 
 vault_type = 'oci_kms_vault'
 vault_id = 'id'
@@ -41,6 +41,7 @@ def show_help(parser, error_msg=None):
 def main():
     # Import Terraform resource into state file
     def import_tf_resource(tf_resource_path, tf_resource_id):
+        time.sleep(10)
         try:
             logging.debug(f"Terraform state file exists, checking for {tf_resource_path}")
 
@@ -142,6 +143,7 @@ def main():
                 
                 if key.display_name == sinput.key_name:
                     logging.debug(f"Found a match on key name: {key.display_name}")
+                    enc_key_id = key.id
                     key_resource_path = '.'.join([module_path, key_type, key_id])
                     key_endpoint_path = '/'.join(['managementEndpoint', vault.management_endpoint, 'keys', key.id])
                     import_tf_resource(key_resource_path, key_endpoint_path)
@@ -151,7 +153,7 @@ def main():
             for secret in secrets_list:
                 logging.debug(f"Looping through secret OCID: {secret.id}")
 
-                if secret.vault_id == vault.id and secret.secret_name == sinput.secret_name:
+                if secret.vault_id == vault.id and secret.secret_name == sinput.secret_name and secret.key_id == enc_key_id:
                     logging.debug(f"Found a match on secret name: {secret.secret_name}")
                     secret_resource_path = '.'.join([module_path, secret_type, secret_id])
 

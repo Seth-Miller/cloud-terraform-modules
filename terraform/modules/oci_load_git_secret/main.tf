@@ -45,6 +45,12 @@ resource "oci_vault_secret" "id" {
     Name    = "${var.project_name}_git-secret"
     Project = var.project_name
   }
+
+  lifecycle {
+    ignore_changes = [
+      key_id,
+    ]
+  }
 }
 
 output "secret_id" {
