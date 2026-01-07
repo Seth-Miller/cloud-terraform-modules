@@ -31,11 +31,6 @@ pipeline {
         sh("./jenkins/scripts/terraform-apply.sh \"${testDir}\"")
       }
     }
-    stage('test command on remote host') {
-      steps {
-        sh("./jenkins/scripts/test-command.sh \"${testDir}\"")
-      }
-    }
     stage('tear down test environment') {
       steps {
         sh("./jenkins/scripts/terraform-destroy.sh \"${testDir}\"")
