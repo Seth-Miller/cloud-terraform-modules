@@ -98,6 +98,7 @@ def main():
 
     # Pull the vaults and secrets from OCI
     kms_vault_client = oci.key_management.KmsVaultClient(config)
+    kms_vault_composite = oci.key_management.KmsVaultClientCompositeOperations(kms_vault_client)
     kms_secret_client = oci.vault.VaultsClient(config)
     vault_list = kms_vault_client.list_vaults(compartment_id=oci_config.tenancy).data
     secrets_list = kms_secret_client.list_secrets(compartment_id=oci_config.tenancy).data
@@ -126,16 +127,12 @@ def main():
             # if the vault is pending deletion, activate it and import it into the terraform state
             if vault.lifecycle_state == oci.key_management.models.Vault.LIFECYCLE_STATE_PENDING_DELETION:
                 logging.info(f"Vault {vault.id} is PENDING DELETION, changing to ACTIVE")
-                kms_vault_client.cancel_vault_deletion(vault_id=vault.id)
-                oci.wait_until(
-                    kms_vault_client,
-                    kms_vault_client.get_vault(vault.id),
-                    'lifecycle_state',
-                    'ACTIVE',
-                    max_wait_seconds=600,
-                    max_interval_seconds=30)
+                # kms_vault_client.cancel_vault_deletion(vault_id=vault.id)
+                # wait until the vault is in an active state
+                # oci.wait_until(kms_vault_client, kms_vault_client.get_vault(vault.id), 'lifecycle_state', 'ACTIVE')
+                kms_vault_composite.cancel_vault_deletion_and_wait_for_state(vault_id,
+                    wait_for_states=[oci.key_management.models.Vault.LIFECYCLE_STATE_ACTIVE])
                 import_tf_resource(vault_resource_path, vault.id)
-                time.sleep(10)
     
             # if the key exists, import it into the terraform state
             for key in keys_list:
