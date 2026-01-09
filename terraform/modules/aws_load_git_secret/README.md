@@ -13,7 +13,7 @@ module "aws_load_git_secret" {
 }
 ```
 The `project_name` variable is used for naming resources and creating resource tags.
-The `region` variable is used to configure the Terraform provider.
+The `region` variable is used to configure the Terraform resources and provider.
 The `git_secret` variable should contain a Git username and password in json format:
 ```
 {
