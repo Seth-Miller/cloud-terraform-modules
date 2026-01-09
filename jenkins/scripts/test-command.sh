@@ -102,8 +102,10 @@ eval $(ssh-agent -s)
 terraform -chdir=${1} output -raw private_key_pem | ssh-add -
 # execute command
 sshOut=$(ssh -o StrictHostKeyChecking=no $sshUser@$(terraform -chdir="${1}" output -raw public_ip) $get_credential_command)
-# kill ssh agent
-ssh-agent -k
 
 # check output of command
-[[ "$sshOut" == "$expected_output" ]] && exit 0 || exit 1 
+if [[ "$sshOut" == "$expected_output" ]]; then
+  die "Git credentials successfully retrieved." 0
+else
+  die "Unable to retrieve Git credentials." 1
+fi
