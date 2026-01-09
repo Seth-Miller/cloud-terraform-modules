@@ -4,7 +4,7 @@ Use the [aws_setup](../aws_setup) module to configure an instance to use the sec
 
 ## Description
 Create a module resource in your Terraform configuration, replacing the variables with your own.
-```bash
+```terraform
 module "aws_load_git_secret" {
   source = "<your_modules_directory>/aws_load_git_secret"
   project_name = var.project_name
@@ -15,7 +15,7 @@ module "aws_load_git_secret" {
 The `project_name` variable is used for naming resources and creating resource tags.
 The `region` variable is used to configure the Terraform resources and provider.
 The `git_secret` variable should contain a Git username and password in json format:
-```
+```json
 {
   username = <your_username>
   password = <your_password>
