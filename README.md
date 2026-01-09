@@ -1,47 +1,27 @@
 # Public Cloud Terraform Modules
-
 Create cloud service configurations that perform a specific function.
 
 ## Description
-
-Each module provisions and configures multiple cloud services within a provider
-
+Each Terraform module provisions and configures multiple cloud services within a provider to serve a specific function.
 
 ## Getting Started
-
-These instructions will get a copy of the project up and running on your local machine for development and testing purposes.
+See the [tests](terraform/tests) directory for examples.
 
 ### Dependencies
-
-List any prerequisites, libraries, or operating system versions needed before installing the program.
-
-*   Windows 10
-*   `npm` or `yarn` (package manager)
+*   Terraform
 
 ### Installation
-
 Step-by-step instructions on how to download your project and get the development environment running.
-
-1.  Clone the repository:
+1.  Copy the module to your modules directory.
     ```bash
-    git clone github.com
+    cp terraform/modules/aws_load_git_secret <your_modules_directory>
     ```
-2.  Navigate to the project directory:
+2.  Create a module resource in your Terraform configuration, replacing the variables with your own.
     ```bash
-    cd your_repo_name
+    module "aws_load_git_secret" {
+      source = "<your_modules_directory>"
+      project_name = var.project_name
+      region       = var.region
+      git_secret   = local.git_secret
+    }
     ```
-3.  Install the required packages:
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-
-### Executing program
-
-Instructions on how to run the application or tests.
-
-```bash
-npm start
-# or
-yarn test
