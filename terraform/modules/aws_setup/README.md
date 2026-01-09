@@ -6,7 +6,7 @@ Use the [aws_load_git_secret](../aws_load_git_secret) module to create the AWS s
 Create a module resource in your Terraform configuration, replacing the variables with your own.
 ```terraform
 module "aws_setup" {
-  source = "<your_modules_directory>"
+  source = "<your_modules_directory>/aws_setup"
   project_name = var.project_name
   region       = var.region
   secret_name  = var.secret_name
