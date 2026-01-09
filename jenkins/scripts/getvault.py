@@ -1,5 +1,14 @@
 #!/usr/bin/python
  
+#####################################################################
+# Script Name: getvault.py
+# Description: Imports an OCI vault, encryption key, and secret.
+# Author: Seth Miller
+# Created: December 15, 2025
+# Version: 1.0
+# Usage: echo '{"key": "value"}' | ./getvault.py
+#####################################################################
+
 import oci
 from python_terraform import Terraform
 from pathlib import Path
