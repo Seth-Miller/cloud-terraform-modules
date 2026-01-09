@@ -13,7 +13,7 @@ module "aws_setup" {
 }
 ```
 The `project_name` variable is used for naming resources and creating resource tags.
-The `region` variable is used to configure the AWS client that accesses the secret.
+The `region` variable is used to configure the Terraform provider and the AWS client that accesses the secret.
 The `secret_name` is the name assigned to the AWS secret containing the Git credentials.
 The `template_cloudinit_config` return variable contains the base64 encoded Cloud-Init script.
 
