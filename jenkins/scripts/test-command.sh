@@ -96,6 +96,8 @@ case "$jkEnvironment" in
     ;;
 esac
 
+# wait for resources to become available
+sleep 120
 # create ssh agent
 eval $(ssh-agent -s)
 # add private key to ssh agent
