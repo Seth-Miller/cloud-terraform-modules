@@ -7,9 +7,6 @@ Each Terraform module provisions and configures multiple cloud services within a
 ## Getting Started
 See the [tests](terraform/tests) directory for examples.
 
-### Dependencies
-*   Terraform
-
 ### Installation
 Step-by-step instructions on how to download your project and get the development environment running.
 1.  Copy the module to your modules directory.
@@ -25,3 +22,6 @@ Step-by-step instructions on how to download your project and get the developmen
       git_secret   = local.git_secret
     }
     ```
+
+### Tests
+Each module includes a test, which can be found in the [tests](terraform/tests) directory. Jenkins pipelines for each test can be found in the [jenkins](jenkins) directory.
