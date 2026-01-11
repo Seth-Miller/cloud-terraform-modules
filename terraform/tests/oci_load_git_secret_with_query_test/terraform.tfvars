@@ -1,6 +1,0 @@
-project_name = "test-oci_load_git_secret"
-region       = "us-chicago-1"
-root_compartment_ocid  = "ocid1.tenancy.oc1..aaaaaaaagzjw43srbqtlam5ayvehor5x6nm4hcybw6zpz5o2ff62braq3o3q"
-vault_compartment_name = "vaults"
-git_username = "testuser"
-git_password = "testpassword"
