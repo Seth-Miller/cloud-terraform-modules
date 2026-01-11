@@ -24,4 +24,4 @@ Step-by-step instructions on how to download your project and get the developmen
     ```
 
 ### Tests
-Each module includes a test, which can be found in the [tests](terraform/tests) directory. Jenkins pipelines for each test can be found in the [jenkins](jenkins) directory.
+Each module includes a test, which can be found in the [tests](terraform/tests) directory. Jenkins pipelines for tests can be found in the [jenkins](jenkins) directory.
