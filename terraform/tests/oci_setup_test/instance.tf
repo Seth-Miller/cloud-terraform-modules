@@ -4,6 +4,10 @@ module "oci_setup" {
   project_name = var.project_name
   region       = var.region
   secret_ocid  = local.target_secret_id
+
+  depends_on = [
+    data.oci_vault_secrets.secret
+  ]
 }
 
 
@@ -52,6 +56,10 @@ resource "oci_core_instance" "vm" {
     Name    = "${var.project_name}_instance"
     Project = var.project_name
   }
+
+  depends_on = [
+    module.oci_setup.template_cloudinit_config
+  ]
 }
 
 output "public_ip" {
