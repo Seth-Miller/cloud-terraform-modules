@@ -119,14 +119,13 @@ def main():
     retry_strategy_via_constructor = oci.retry.RetryStrategyBuilder(
       # Make up to 10 service calls
       max_attempts_check=True,
-      max_attempts=10,
+      max_attempts=20,
       # Don't exceed a total of 600 seconds for all service calls
       total_elapsed_time_check=True,
       total_elapsed_time_seconds=600,
       # Wait between attempts
-      retry_max_wait_between_calls_seconds=45,
-      # Use 2 seconds as the base number for doing sleep time calculations
-      retry_base_sleep_time_seconds=10,
+      retry_max_wait_between_calls_seconds=60,
+      retry_base_sleep_time_seconds=30,
       # Retry on certain service errors:
       #
       #   - 5xx code received for the request
