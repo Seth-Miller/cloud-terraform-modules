@@ -114,6 +114,35 @@ def main():
     logging.debug(f"Vault list: {vault_list}")
     logging.debug(f"Secrets list: {secrets_list}")
     
+    # custom retry constructor was added because of transient service error 409
+    #   received when trying to cancel deletion of secret
+    retry_strategy_via_constructor = oci.retry.RetryStrategyBuilder(
+      # Make up to 10 service calls
+      max_attempts_check=True,
+      max_attempts=10,
+      # Don't exceed a total of 600 seconds for all service calls
+      total_elapsed_time_check=True,
+      total_elapsed_time_seconds=600,
+      # Wait between attempts
+      retry_max_wait_between_calls_seconds=45,
+      # Use 2 seconds as the base number for doing sleep time calculations
+      retry_base_sleep_time_seconds=10,
+      # Retry on certain service errors:
+      #
+      #   - 5xx code received for the request
+      #   - Any 429 (this is signified by the empty array in the retry config)
+      #   - 400s where the code is QuotaExceeded or LimitExceeded
+      service_error_check=True,
+      service_error_retry_on_any_5xx=True,
+      service_error_retry_config={
+          409: ['IncorrectState']
+      },
+      # Use exponential backoff and retry with full jitter, but on throttles use
+      # exponential backoff and retry with equal jitter
+      backoff_type=oci.retry.BACKOFF_FULL_JITTER_EQUAL_ON_THROTTLE_VALUE
+      ).get_retry_strategy()
+
+
     # Loop through the vault list
     for vault in vault_list:
         logging.debug(f"Looping through vault OCID: {vault.id}")
@@ -136,9 +165,6 @@ def main():
             # if the vault is pending deletion, activate it and import it into the terraform state
             if vault.lifecycle_state == oci.key_management.models.Vault.LIFECYCLE_STATE_PENDING_DELETION:
                 logging.info(f"Vault {vault.id} is PENDING DELETION, changing to ACTIVE")
-                # kms_vault_client.cancel_vault_deletion(vault_id=vault.id)
-                # wait until the vault is in an active state
-                # oci.wait_until(kms_vault_client, kms_vault_client.get_vault(vault.id), 'lifecycle_state', 'ACTIVE')
                 kms_vault_composite.cancel_vault_deletion_and_wait_for_state(vault.id,
                     wait_for_states=[oci.key_management.models.Vault.LIFECYCLE_STATE_ACTIVE])
                 import_tf_resource(vault_resource_path, vault.id)
@@ -171,8 +197,21 @@ def main():
                     # if the secret is pending deletion, activate it and import it into the terraform state
                     if secret.lifecycle_state == oci.vault.models.Secret.LIFECYCLE_STATE_PENDING_DELETION:
                         logging.info(f"Secret {secret.id} is PENDING DELETION, changing to ACTIVE")
-                        time.sleep(10)
-                        kms_secret_client.cancel_secret_deletion(secret_id=secret.id)
+                        #time.sleep(60)
+                        #try:
+                        kms_secret_client.cancel_secret_deletion(secret.id, retry_strategy=retry_strategy_via_constructor)
+                        #kms_secret_composite.cancel_secret_deletion_and_wait_for_state(secret_id=secret.id,
+                        #  wait_for_states=[oci.vault.models.Secret.LIFECYCLE_STATE_ACTIVE],
+                        #  operation_kwargs={"retry_strategy": retry_strategy_via_constructor})
+
+                        #except oci.exceptions.TransientServiceError as e:
+                        oci.wait_until(
+                          kms_secret_client,
+                          kms_secret_client.get_secret(secret.id),
+                          evaluate_response=lambda r: r.data.lifecycle_state == oci.vault.models.Secret.LIFECYCLE_STATE_ACTIVE,
+                          max_wait_seconds=600
+                        )
+
                         import_tf_resource(secret_resource_path, secret.id)
     
                     break
