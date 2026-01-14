@@ -1,0 +1,13 @@
+pipeline {
+  agent { label 'user-agent' }
+  environment {
+    jkEnvironment = 'AWS'
+  }
+  stages {
+    stage('test1') {
+      steps {
+        echo "Workspace: ${env.WORKSPACE}"
+      }
+    }
+  }
+}
