@@ -1,14 +1,33 @@
-def createDir = './terraform/tests/aws_load_git_secret_test'
-def testDir = './terraform/tests/aws_setup_test'
+def testPrefix = './terraform/tests/'
+
 pipeline {
   agent { label 'user-agent' }
-  environment {
-    jkEnvironment = 'AWS'
+
+  parameters {
+    choice(name: 'jkEnvironment', choices: ['OCI', 'AWS'], description: 'Select deployment environment')
   }
+
+  environment {
+    jkEnvironment = params.jkEnvironment
+    createDir = "${testPrefix}${getCreateDir(params.jkEnvironment)}"
+    testDir = "${testPrefix}${getTestDir(params.jkEnvironment)}"
+    getvaultInput = getVaultInput(params.jkEnvironment)
+  }
+
   stages {
     stage('create git secret') {
       steps {
-        sh("./jenkins/scripts/terraform-apply.sh \"${createDir}\"")
+        script {
+          if (params.jkEnvironment == "OCI") {
+            withEnv(["SCRIPT_INPUT=${getvaultInput}"]) {
+              sh '''
+                ./jenkins/scripts/getvault.py <<< "${SCRIPT_INPUT}"
+              '''
+            }
+          } else {
+            sh("./jenkins/scripts/terraform-apply.sh \"${createDir}\"")
+          }
+        }
       }
     }
     stage('test git secret') {
@@ -31,5 +50,41 @@ pipeline {
         sh("./jenkins/scripts/terraform-destroy.sh \"${createDir}\"")
       }
     }
+  }
+}
+
+def getCreateDir(environment) {
+  switch(environment) {
+    case 'OCI':
+      return 'oci_load_git_secret_test'
+    case 'AWS':
+      return 'aws_load_git_secret_test'
+    default:
+      return ''
+  }
+}
+
+def getTestDir(environment) {
+  switch(environment) {
+    case 'OCI':
+      return 'oci_setup_test'
+    case 'AWS':
+      return 'aws_setup_test'
+    default:
+      return ''
+  }
+}
+
+def getVaultInput(environment) {
+  switch(environment) {
+    case 'OCI':
+      return '''{
+        "vault_name": "test-oci_load_git_secret_git-secret",
+        "secret_name": "test-oci_load_git_secret_git-secret",
+        "key_name": "test-oci_load_git_secret_git-secret",
+        "working_dir": "./terraform/tests/oci_load_git_secret_test"
+      }'''
+    default:
+      return ''
   }
 }
