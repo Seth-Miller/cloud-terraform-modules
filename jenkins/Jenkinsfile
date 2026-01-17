@@ -8,10 +8,10 @@ pipeline {
   }
 
   environment {
-    jkEnvironment = params.jkEnvironment
+    jkEnvironment = "${params.jkEnvironment}"
     createDir = "${testPrefix}${getCreateDir(params.jkEnvironment)}"
     testDir = "${testPrefix}${getTestDir(params.jkEnvironment)}"
-    getvaultInput = getVaultInput(params.jkEnvironment)
+    getvaultInput = "${getVaultInput(params.jkEnvironment)}"
   }
 
   stages {
