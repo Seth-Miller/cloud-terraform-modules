@@ -9,7 +9,7 @@ module "aws_load_git_secret" {
   source = "<your_modules_directory>/aws_load_git_secret"
   project_name = var.project_name
   region       = var.region
-  git_secret   = local.git_secret
+  git_secret   = var.git_secret
 }
 ```
 The `project_name` variable is used for naming resources and creating resource tags.
