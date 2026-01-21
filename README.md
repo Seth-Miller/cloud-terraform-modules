@@ -16,10 +16,10 @@ Step-by-step instructions on how to download your project and get the developmen
 2.  Create a module resource in your Terraform configuration, replacing the variables with your own.
     ```bash
     module "aws_load_git_secret" {
-      source = "<your_modules_directory>"
+      source = "<your_modules_directory>/aws_load_git_secret"
       project_name = var.project_name
       region       = var.region
-      git_secret   = local.git_secret
+      git_secret   = var.git_secret
     }
     ```
 
