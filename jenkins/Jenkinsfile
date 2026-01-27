@@ -76,14 +76,16 @@ def getTestDir(environment) {
 }
 
 def getVaultInput(environment) {
+  def secretName = "test-oci_load_git_secret_git-secret"
   switch(environment) {
     case 'OCI':
-      return '''{
-        "vault_name": "test-oci_load_git_secret_git-secret",
-        "secret_name": "test-oci_load_git_secret_git-secret",
-        "key_name": "test-oci_load_git_secret_git-secret",
-        "working_dir": "./terraform/tests/oci_load_git_secret_test"
-      }'''
+      return """{
+        "vault_name": "${secretName}",
+        "secret_name": "${secretName}",
+        "key_name": "${secretName}",
+        "working_dir": "./terraform/tests/oci_load_git_secret_test",
+        "module_name": "oci_load_git_secret"
+      }"""
     default:
       return ''
   }
