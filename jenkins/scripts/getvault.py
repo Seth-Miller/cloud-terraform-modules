@@ -17,11 +17,9 @@ from pythonjsonlogger import jsonlogger
 import os, sys, logging, json, time
 
 vault_type = 'oci_kms_vault'
-vault_id = 'id'
 key_type = 'oci_kms_key'
-key_id = 'id'
 secret_type = 'oci_vault_secret'
-secret_id = 'id'
+
 debug_mode = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
 
 # Setup logger
@@ -62,7 +60,7 @@ def main():
 
 
     # Define the argument parser
-    custom_usage = "echo '{\"vault_name\": \"...\", \"secret_name\": \"...\", \"key_name\": \"...\", \"working_dir\": \"...\", \"module_name\": \"...\"}' | python %(prog)s"
+    custom_usage = "echo '{\"vault_name\": \"...\", \"secret_name\": \"...\", \"key_name\": \"...\", \"working_dir\": \"...\", \"module_name\": \"...\", \"vault_resource_name\": \"...\", \"key_resource_name\": \"...\", \"secret_resource_name\": \"...\"}' | python %(prog)s"
     parser = ArgumentParser(
         description="OCI & Terraform vault, key, and secret importer",
         usage=custom_usage
@@ -74,6 +72,9 @@ def main():
     parser.add_argument("--key_name", type=str, required=True, help="Name of the encryption key")
     parser.add_argument("--working_dir", type=str, required=True, help="Terraform working directory path")
     parser.add_argument("--module_name", type=str, required=True, help="Terraform module name")
+    parser.add_argument("--vault_resource_name", type=str, default="id", help="Terraform vault resource name")
+    parser.add_argument("--key_resource_name", type=str, default="id", help="Terraform key resource name")
+    parser.add_argument("--secret_resource_name", type=str, default="id", help="Terraform secret resource name")
 
     # Handle help menu explicitly
     if len(sys.argv) > 1 and sys.argv[1] in ["--help", "-h"]:
@@ -93,7 +94,12 @@ def main():
     except Exception as e:
         show_help(parser, f"Input Validation Error: {e}")
 
-    module_path = '.'.join(['module', sinput.module_name])
+    module_name = sinput.module_name
+    vault_id = sinput.vault_resource_name
+    key_id = sinput.key_resource_name
+    secret_id = sinput.secret_resource_name
+
+    module_path = '.'.join(['module', module_name])
 
     logger.info(f"Initializing Terraform in directory: {Path(sinput.working_dir)}")
     tf = Terraform(working_dir=Path(sinput.working_dir))

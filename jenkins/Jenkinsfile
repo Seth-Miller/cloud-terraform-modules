@@ -84,7 +84,10 @@ def getVaultInput(environment) {
         "secret_name": "${secretName}",
         "key_name": "${secretName}",
         "working_dir": "./terraform/tests/oci_load_git_secret_test",
-        "module_name": "oci_load_git_secret"
+        "module_name": "oci_load_git_secret",
+        "vault_resource_name": "id",
+        "key_resource_name": "id",
+        "secret_resource_name": "id"
       }"""
     default:
       return ''
